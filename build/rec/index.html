@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>控制页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .control-item {
+            margin-bottom: 20px;
+        }
+
+        .control-item label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+
+        .control-item input[type="range"] {
+            width: 250px;
+            vertical-align: middle;
+        }
+
+        .control-item .slider-value {
+            display: inline-block;
+            width: 65px;
+            text-align: center;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .control-item .color-picker {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .button {
+            display: block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>控制页面</h1>
+        <div class="control-item">
+            <label for="max_dist">敌人发光距离:</label>
+            <input type="range" id="max_dist" min="0" max="1200" step="0.1"
+                oninput="updateSliderValue(this, 'maxDistValue')">
+            <span class="slider-value" id="maxDistValue"></span>
+
+        </div>
+        <div class="control-item">
+            <label for="item_glow_dist">物品发光距离:</label>
+            <input type="range" id="item_glow_dist" min="0" max="200" step="0.1"
+                oninput="updateSliderValue(this, 'ItemDistValue')">
+            <span class="slider-value" id="ItemDistValue"></span>
+
+        </div>
+
+        <!-- <div class="control-item">
+            <label for="team_player">Team Player:</label>
+            <input type="text" id="team_player">
+        </div> -->
+        <div class="control-item">
+            <label for="esp">ESP:</label>
+            <input type="checkbox" id="esp">
+        </div>
+        <div class="control-item">
+            <label for="item_glow">物品发光:</label>
+            <input type="checkbox" id="item_glow">
+        </div>
+        <div class="control-item">
+            <label for="player_glow">人物发光:</label>
+            <input type="checkbox" id="player_glow" onclick="toggleColorPicker()">
+        </div>
+        <div class="control-item" id="shieldColorContainer">
+            <label for="show_shield">人物发光护甲颜色:</label>
+            <input type="checkbox" id="show_shield" onclick="toggleColorPicker()">
+        </div>
+        <div class="control-item" id="defaultColorContainer">
+            <label for="color_picker">人物发光颜色(开发中):</label>
+            <input type="color" id="color_picker">
+            <span class="color-value" id="colorValue"></span>
+        </div>
+
+        <button id="updateButton" class="button" onclick="validateBackendUrl()">链接</button>
+    </div>
+
+    <script>
+        var isBackendUrlValid = false;
+        const controls = document.querySelectorAll("input[type='range'], input[type='text'], input[type='checkbox']");
+
+        // 获取后端API的地址
+        function getApiUrl() {
+            const backendUrl = window.location.hostname + ":8000";
+            return "http://" + backendUrl + "/api/control";
+        }
+
+        // 获取控制变量的值
+        function getControlValues() {
+            fetch(getApiUrl())
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("item_glow_dist").value = data.item_glow_dist.toFixed(1);
+                    document.getElementById("ItemDistValue").textContent = data.item_glow_dist.toFixed(1) + "米";
+                    document.getElementById("max_dist").value = data.max_dist.toFixed(1);
+                    document.getElementById("maxDistValue").textContent = data.max_dist.toFixed(1) + "米";
+                    document.getElementById("esp").checked = data.esp;
+                    document.getElementById("item_glow").checked = data.item_glow;
+                    document.getElementById("player_glow").checked = data.player_glow;
+                    document.getElementById("show_shield").checked = data.show_shield;
+                    toggleColorPicker();
+                })
+                .catch(error => {
+                    console.log("Error:", error);
+                });
+        }
+
+        // 更新滑块数值显示
+        function updateSliderValue(slider, valueId) {
+            document.getElementById(valueId).textContent = slider.value + "米";
+        }
+        // 切换颜色选择器的显示状态
+        function toggleColorPicker() {
+            const playerGlowCheckbox = document.getElementById("player_glow");
+            const showShieldCheckbox = document.getElementById("show_shield");
+            const shieldColorContainer = document.getElementById("shieldColorContainer");
+            const colorPickerContainer = document.getElementById("defaultColorContainer");
+
+            if (playerGlowCheckbox.checked) {
+                shieldColorContainer.style.display = "block";
+                if (!showShieldCheckbox.checked) {
+                    colorPickerContainer.style.display = "block";
+                } else {
+                    colorPickerContainer.style.display = "none";
+                }
+            } else {
+                shieldColorContainer.style.display = "none";
+                colorPickerContainer.style.display = "none";
+            }
+        }
+
+        // 验证后端地址是否有效
+        function validateBackendUrl() {
+            fetch(getApiUrl())
+                .then(response => {
+                    if (response.ok) {
+                        isBackendUrlValid = true;
+                        console.log("Backend URL is valid");
+                        document.getElementById("updateButton").innerText = "更新控制变量";
+                        document.getElementById("updateButton").onclick = updateControls;
+                        startAutoUpdate();
+                    } else {
+                        console.log("Failed to validate backend URL");
+                    }
+                })
+                .catch(error => {
+                    console.log("Error:", error);
+                });
+        }
+
+        // 定期更新控制变量的值
+        function startAutoUpdate() {
+            getControlValues();
+            setInterval(getControlValues, 1000); // 每秒更新一次
+        }
+
+        // 更新控制变量的值
+        function updateControls() {
+            if (isBackendUrlValid) {
+                let item_glow_dist = parseFloat(document.getElementById("item_glow_dist").value);
+                let max_dist = parseFloat(document.getElementById("max_dist").value);
+                const esp = document.getElementById("esp").checked;
+                const item_glow = document.getElementById("item_glow").checked;
+                const player_glow = document.getElementById("player_glow").checked;
+                const show_shield = document.getElementById("show_shield").checked;
+
+                // Add 0.01 to decimal part if it is 0
+                if (Math.floor(item_glow_dist) === item_glow_dist) {
+                    item_glow_dist += 0.01;
+                }
+                if (Math.floor(max_dist) === max_dist) {
+                    max_dist += 0.01;
+                }
+
+                const requestBody = {
+                    item_glow_dist: item_glow_dist,
+                    max_dist: max_dist,
+                    esp: esp ? 1 : 0,
+                    item_glow: item_glow ? 1 : 0,
+                    player_glow: player_glow ? 1 : 0,
+                    show_shield: show_shield ? 1 : 0
+                };
+
+                fetch(getApiUrl(), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                    .then(response => {
+                        if (response.status === 200) {
+                            console.log("Controls updated successfully");
+                            getControlValues();
+                        } else {
+                            console.log("Failed to update controls");
+                        }
+                    })
+                    .catch(error => {
+                        console.log("Error:", error);
+                    });
+            } else {
+                getControlValues();
+            }
+        }
+
+        controls.forEach(control => {
+            control.addEventListener("change", updateControls);
+        });
+
+        // 页面加载完成后，获取初始控制变量的值
+        document.addEventListener("DOMContentLoaded", () => {
+            validateBackendUrl();
+        });
+    </script>
+</body>
+
+</html>

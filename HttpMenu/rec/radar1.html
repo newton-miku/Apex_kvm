@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Radar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background-color: #212121;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        canvas {
+            width: 100vw;
+            max-width: 800px;
+            border: 1px solid #ffffff;
+            margin-top: 20px;
+            background-color: #000000;
+        }
+
+        #distance {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        #distance span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <canvas id="radarCanvas" width="800" height="800"></canvas>
+        <div id="distance">
+            最近的敌人: <span id="distanceValue"></span><br>
+            <a href="radar.html" style="color: rgba(9, 233, 177, 0.9); font-size:25px">经典样式</a>
+            <a href="phone.html" style="color: rgba(9, 233, 177, 0.9); font-size:25px">手机点我</a>
+            <a href="map.html" style="color: rgba(9, 233, 177, 0.9); font-size:25px">地图点我</a>
+        </div>
+    </div>
+
+    <script>
+        function calculateDistance(x, y) {
+            return Math.sqrt(x * x + y * y);
+        }
+
+        function drawRadar(enemies) {
+            var canvas = document.getElementById('radarCanvas');
+            var ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制雷达圆圈
+            var centerX = canvas.width / 2;
+            var centerY = canvas.height / 2;
+            var maxRadius = Math.min(centerX, centerY);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, maxRadius, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 绘制固定的圆圈标线
+            var numLines = 4; // 圆圈标线的数量
+            var step = maxRadius / numLines;
+            var colors = ['#03DAC5', '#BB86FC', '#FFD700', '#FF2D55']; // 圆圈标线的颜色
+            for (var i = 1; i <= numLines; i++) {
+                var radius = i * step;
+
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = colors[i - 1];
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+
+                // 标上距离圆心的距离
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(radius.toFixed(2) + ' m', centerX, centerY - radius - 5);
+            }
+
+            var closestDistance = Number.MAX_VALUE;
+            var closestEnemy = null;
+
+            // 绘制敌人位置
+            for (var i = 0; i < enemies.length; i++) {
+                var enemy = enemies[i];
+                var targetX = centerX + enemy.x;
+                var targetY = centerY - enemy.y;
+
+                ctx.beginPath();
+                ctx.arc(targetX, targetY, 5, 0, 2 * Math.PI);
+
+                // 根据护甲类型设置颜色
+                var armorColor = '#ffffff';
+                var armorStyle = 'fill';
+                switch (enemy.armor) {
+                    case 'blue':
+                        armorColor = '#03DAC5';
+                        break;
+                    case 'purple':
+                        armorColor = '#BB86FC';
+                        break;
+                    case 'red':
+                        armorColor = '#FF2D55';
+                        break;
+                    case 'gold':
+                        armorColor = '#FFD700';
+                        break;
+                    case 'down':
+                        armorColor = '#03DAC5';
+                        armorStyle = 'stroke';
+                        break;
+                    case 'team':
+                        armorColor = '#00C853';
+                        break;
+                }
+
+                ctx.fillStyle = armorStyle === 'fill' ? armorColor : 'transparent';
+                ctx.strokeStyle = armorStyle === 'stroke' ? armorColor : 'transparent';
+                ctx.lineWidth = armorStyle === 'stroke' ? 2 : 0;
+                ctx.setLineDash([]);
+                ctx.fill();
+                ctx.stroke();
+
+                // 计算相对中心距离并显示
+                var distance = calculateDistance(enemy.x, enemy.y);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(distance.toFixed(2) + ' m', targetX, targetY - 10);
+
+                // 寻找最近的敌人
+                if (enemy.armor != 'team') {
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestEnemy = enemy;
+                    }
+                }
+            }
+
+            // 绘制中心点
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#00C853';
+            ctx.fill();
+
+            // 更新最近敌人的距离文本
+            var distanceValueElement = document.getElementById('distanceValue');
+            if (closestEnemy) {
+                distanceValueElement.textContent = closestDistance.toFixed(2) + "m";
+            } else {
+                distanceValueElement.textContent = 'N/A';
+            }
+        }
+
+        // 发起请求获取位置数据
+        function getPositions() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/position', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var positions = JSON.parse(xhr.responseText);
+                    drawRadar(positions);
+                }
+            };
+            xhr.send();
+        }
+
+        // 定时更新位置数据
+        //setInterval(getPositions, 100);
+        // 建立WebSocket连接
+        const backendUrl = "ws://" + window.location.hostname + ":8080";
+        var socket = new WebSocket(backendUrl);
+
+        // 处理WebSocket连接建立事件
+        socket.onopen = function (event) {
+            console.log('WebSocket连接已建立');
+        };
+
+        // 处理WebSocket接收到消息事件
+        socket.onmessage = function (event) {
+            var positions = JSON.parse(event.data);
+            drawRadar(positions);
+        };
+
+        // 处理WebSocket连接关闭事件
+        socket.onclose = function (event) {
+            console.log('WebSocket连接已关闭');
+        };
+
+        // 定时发送WebSocket消息请求位置数据
+        setInterval(function () {
+            socket.send('get_positions');
+        }, 10);
+    </script>
+</body>
+
+</html>

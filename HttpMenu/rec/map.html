@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Radar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        canvas {
+            width: 100vw;
+            max-width: 1800px;
+            border: 1px solid #fff;
+            margin-top: 20px;
+        }
+
+        #mapCanvas,
+        #radarCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #radarCanvas {
+            z-index: 1;
+        }
+
+        #mapCanvas {
+            /* display: none; */
+            z-index: -1;
+        }
+
+
+        #distance {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: center;
+            color: white;
+        }
+
+        #distance span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <canvas id="mapCanvas" width="1800" height="1800"></canvas>
+        <canvas id="radarCanvas" width="1800" height="1800"></canvas>
+        <!-- <div id="distance">
+            最近的敌人: <span id="distanceValue"></span><br>
+            <a href="phone.html" style="color: rgba(9, 233, 177, 0.9); font-size:25px">手机点我</a>
+            <a href="radar1.html" style="color: rgba(9, 233, 177, 0.9); font-size:25px">极简样式</a>
+        </div> -->
+    </div>
+
+    <script>
+        var width;
+        var height;
+        var currentMapName = null;
+        var currentMapImageUrl = null;
+
+        function calculateDistance(x, y) {
+            return Math.sqrt(x * x + y * y);
+        }
+
+        function drawRadar(data) {
+            var canvas = document.getElementById('radarCanvas');
+            var ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            var closestDistance = Number.MAX_VALUE;
+            var closestEnemy = null;
+            var allsize = 1800;
+
+            // 绘制敌人位置
+            for (var i = 0; i < data.enemies.length; i++) {
+                var enemy = data.enemies[i];
+                var targetX = enemy.x * allsize;
+                var targetY = enemy.y * allsize;
+
+                ctx.beginPath();
+
+                // 根据护甲类型设置颜色和样式
+                var armorColor = 'white';
+                var armorStyle = 'fill';
+                switch (enemy.armor) {
+                    case 'blue':
+                        armorColor = '#00BFFF';
+                        break;
+                    case 'purple':
+                        armorColor = 'purple';
+                        break;
+                    case 'red':
+                        armorColor = 'red';
+                        break;
+                    case 'gold':
+                        armorColor = 'gold';
+                        break;
+                    case 'down':
+                        armorColor = 'blue';
+                        armorStyle = 'stroke';
+                        break;
+                    case 'team':
+                        armorColor = 'green';
+                        break;
+                }
+
+                ctx.arc(targetX, targetY, 3, 0, 2 * Math.PI);
+                ctx.strokeStyle = armorColor;
+                ctx.fillStyle = armorStyle === 'fill' ? armorColor : 'transparent';
+                ctx.lineWidth = armorStyle === 'stroke' ? 2 : 0;
+                ctx.stroke();
+                ctx.fill();
+
+                // 计算相对中心距离并显示
+                //var distance = calculateDistance(enemy.x, enemy.y);
+                ctx.fillStyle = 'white';
+                ctx.fillText(enemy.name, targetX + 10, targetY + 10);
+
+            }
+
+            // 更新最近敌人的距离文本
+            // var distanceValueElement = document.getElementById('distanceValue');
+            // if (closestEnemy) {
+            //     distanceValueElement.textContent = closestDistance.toFixed(2) + "m";
+            // } else {
+            //     distanceValueElement.textContent = 'N/A';
+            // }
+        }
+
+        // 建立WebSocket连接
+        //const backendUrl = "ws://10.10.4.5:8080";
+        const backendUrl = "ws://" + window.location.hostname + ":8080";
+        var socket = new WebSocket(backendUrl);
+
+        // 处理WebSocket连接建立事件
+        socket.onopen = function (event) {
+            console.log('WebSocket连接已建立');
+        };
+        var mapImage;
+        // 处理WebSocket接收到消息事件
+        socket.onmessage = function (event) {
+            var data = JSON.parse(event.data);
+            var mapName = data.map;
+
+            if (currentMapName !== mapName) {
+                currentMapName = mapName;
+                //currentMapImageUrl = 'https://gcore.jsdelivr.net/gh/newton-miku/Apex-Maps@main/' + mapName + '.png';
+                currentMapImageUrl = './' + mapName + '.png';
+
+                mapImage = new Image();
+                mapImage.onload = function () {
+                    width = mapImage.width;
+                    height = mapImage.height;
+                    console.log('Map dimensions:', width, 'x', height);
+                    var canvas = document.getElementById('mapCanvas');
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
+
+                    var radarCanvas = document.getElementById('radarCanvas');
+                    var radarCtx = radarCanvas.getContext('2d');
+                    radarCtx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+                    drawRadar(data);
+                };
+                mapImage.src = currentMapImageUrl;
+            } else {
+                width = mapImage.width;
+                height = mapImage.height;
+                drawRadar(data);
+            }
+        };
+
+        // 处理WebSocket连接关闭事件
+        socket.onclose = function (event) {
+            console.log('WebSocket连接已关闭');
+        };
+
+        // 定时发送WebSocket消息请求位置数据
+        setInterval(function () {
+            socket.send('get_map');
+        }, 10);
+    </script>
+</body>
+
+</html>

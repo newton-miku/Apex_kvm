@@ -1,0 +1,20 @@
+/media/Game/aaaProject/project/apex_dma_kvm_pub/apex_dma/memflow_lib/target/release/deps/ureq-6320a5cffc7d9ac3.rmeta: /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/lib.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/agent.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/body.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/error.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/header.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/pool.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/proxy.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/request.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/resolve.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/response.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/stream.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/unit.rs
+
+/media/Game/aaaProject/project/apex_dma_kvm_pub/apex_dma/memflow_lib/target/release/deps/libureq-6320a5cffc7d9ac3.rlib: /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/lib.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/agent.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/body.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/error.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/header.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/pool.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/proxy.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/request.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/resolve.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/response.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/stream.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/unit.rs
+
+/media/Game/aaaProject/project/apex_dma_kvm_pub/apex_dma/memflow_lib/target/release/deps/ureq-6320a5cffc7d9ac3.d: /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/lib.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/agent.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/body.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/error.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/header.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/pool.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/proxy.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/request.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/resolve.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/response.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/stream.rs /root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/unit.rs
+
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/lib.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/agent.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/body.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/error.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/header.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/pool.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/proxy.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/request.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/resolve.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/response.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/stream.rs:
+/root/.cargo/registry/src/github.com-1ecc6299db9ec823/ureq-1.5.5/src/unit.rs:
+
+# env-dep:CARGO_PKG_VERSION=1.5.5
