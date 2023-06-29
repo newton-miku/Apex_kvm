@@ -1,16 +1,22 @@
 #include "prediction.h"
+#include <random>
 
 extern Memory apex_mem;
 
 extern bool firing_range;
 extern bool show_shield;
+extern bool ViewWarn;
 extern float item_glow_dist;
 extern uint64_t g_Base;
 extern char mapname[64];
-float smooth = 12.0f;
-bool aim_no_recoil = true;
-int bone = 2;
+float smooth = 20.0f;
+bool aim_no_recoil = false;
+int bone = 3;
 float curTime;
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_real_distribution<double> smoothd(-3.0, 3.0);
+std::uniform_int_distribution<int> bones(0.0, bone);
 
 bool lowHealth = false;
 bool freedm = false;
@@ -33,6 +39,7 @@ float PURPLE[3] = {0.70588f, 0.0f, 1.0f};
 float ORANGE[3] = {1.0f, 0.6470588f, 0.0f};
 float WHITE[3] = {1.0f, 1.0f, 1.0f};
 float GOLD[3] = {1.0f, 0.933333f, 0.0f};
+int mode1 = 126, mode2 = 9, mode3 = 46, mode4 = 30;
 
 struct GlowMode
 {
@@ -103,13 +110,32 @@ int CheckGameMode()
 {
 	char gamemode[20] = {};
 	GetGamemode(gamemode);
-	if (!strcmp(gamemode, "freedm"))
+	IsLobby();
+	if (strstr(mapname, "arena"))
+	{
+		freedm = false;
+		control = true;
+		return CONTROL_MODE;
+	}
+	else if (!strcmp(mapname, "mp_rr_party_crasher"))
+	{
+		freedm = false;
+		control = true;
+		return CONTROL_MODE;
+	}
+	else if (!strcmp(mapname, "mp_rr_tropic_island_mu1"))
+	{
+		freedm = false;
+		control = true;
+		return CONTROL_MODE;
+	}
+	else if (!strcmp(gamemode, "freedm"))
 	{
 		freedm = true;
 		control = false;
 		return FREEDM_MODE;
 	}
-	if (!strcmp(gamemode, "control"))
+	else if (!strcmp(gamemode, "control"))
 	{
 		freedm = false;
 		control = true;
@@ -148,6 +174,34 @@ bool ColCheck(float a[], float b[])
 			if (fabs(a[2] - b[2]) < 1e-6)
 				return true;
 	return false;
+}
+
+void GlowHand(uint64_t ptr, float *color)
+{
+	if (ViewWarn)
+	{
+		apex_mem.Write<GlowMode>(ptr + GLOW_TYPE, {(int8_t)mode1, (int8_t)mode2, (int8_t)mode3, (int8_t)mode4});
+		apex_mem.Write<int>(ptr + OFFSET_GLOW_ENABLE, 1);
+		apex_mem.Write<int>(ptr + OFFSET_GLOW_THROUGH_WALLS, 2);
+		apex_mem.Write<float>(ptr + 0x1d0, color[0]);
+		apex_mem.Write<float>(ptr + 0x1d4, color[1]);
+		apex_mem.Write<float>(ptr + 0x1d8, color[2]);
+	}
+	else
+	{
+		apex_mem.Write<int>(ptr + OFFSET_GLOW_T1, 0);
+		apex_mem.Write<int>(ptr + OFFSET_GLOW_T2, 0);
+		apex_mem.Write<int>(ptr + OFFSET_GLOW_ENABLE, 2);
+		apex_mem.Write<int>(ptr + OFFSET_GLOW_THROUGH_WALLS, 5);
+	}
+}
+void GlowHandDisable(uint64_t ptr)
+{
+
+	apex_mem.Write<int>(ptr + OFFSET_GLOW_T1, 0);
+	apex_mem.Write<int>(ptr + OFFSET_GLOW_T2, 0);
+	apex_mem.Write<int>(ptr + OFFSET_GLOW_ENABLE, 2);
+	apex_mem.Write<int>(ptr + OFFSET_GLOW_THROUGH_WALLS, 5);
 }
 
 int Entity::getTeamId()
@@ -226,10 +280,10 @@ float Entity::lastVisTime()
 bool Entity::IsVisible()
 {
 	GetCurTime();
-	// float visibleTime;
-	float visibleTime = *(float *)(buffer + OFFSET_VISIBLE_TIME);
-	// apex_mem.Read<float>(ptr + OFFSET_VISIBLE_TIME, visibleTime);
-	return (visibleTime > 0.0f && fabsf(visibleTime - curTime) < 0.15f);
+	float visibleTime;
+	// float visibleTime = *(float *)(buffer + OFFSET_VISIBLE_TIME);
+	apex_mem.Read<float>(ptr + OFFSET_VISIBLE_TIME, visibleTime);
+	return (visibleTime > 0.0f && fabsf(visibleTime - curTime) < 0.13f);
 }
 Vector Entity::getBonePosition(int id)
 {
@@ -269,7 +323,8 @@ Vector Entity::getBonePositionByHitbox(int id)
 	int HitboxIndex = ((uint16_t)(IndexCache & 0xFFFE) << (4 * (IndexCache & 1)));
 
 	uint16_t Bone;
-	apex_mem.Read<uint16_t>(HitBoxsArray + HitboxIndex + (id * 0x20), Bone);
+	int boneId = bones(gen);
+	apex_mem.Read<uint16_t>(HitBoxsArray + HitboxIndex + (boneId * 0x20), Bone);
 
 	if (Bone < 0 || Bone > 255)
 		return Vector();
@@ -314,7 +369,7 @@ float Entity::GetYaw()
 
 bool Entity::isGlowing()
 {
-	return *(int *)(buffer + OFFSET_GLOW_ENABLE) == 7;
+	return *(int *)(buffer + OFFSET_GLOW_ENABLE) == 1;
 }
 
 bool Entity::isZooming()
@@ -596,8 +651,10 @@ QAngle CalculateBestBoneAim(Entity &from, uintptr_t t, float max_fov)
 	}
 
 	Math::NormalizeAngles(Delta);
+	Delta.y /= 80;
 
-	QAngle SmoothedAngles = ViewAngles + Delta / smooth;
+	float rdsmooth = smoothd(gen);
+	QAngle SmoothedAngles = ViewAngles + Delta / (smooth + rdsmooth);
 	return SmoothedAngles;
 }
 
@@ -652,7 +709,7 @@ void WeaponXEntity::update(uint64_t LocalPlayer)
 
 	wephandle &= 0xffff;
 
-	uint64_t wep_entity = 0;
+	wep_entity = 0;
 	apex_mem.Read<uint64_t>(entitylist + (wephandle << 5), wep_entity);
 
 	projectile_speed = 0;

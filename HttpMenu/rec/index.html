@@ -99,15 +99,65 @@
             <input type="checkbox" id="aim">
         </div>
         <div class="control-item" id="maxfovContainer">
-            <label for="max_fov">瞄准fov:</label>
-            <input type="range" id="max_fov" min="0" max="30" step="0.1"
-                oninput="updateSliderValue1(this, 'MaxFovValue')">
-            <span class="slider-value" id="MaxFovValue"></span>
+            <!-- <div class="control-item">
+                <label for="aimkey">aimkey(手柄):</label>
+                <input type="checkbox" id="aimkey">
+            </div> -->
+            <div class="control-item">
+                <label for="key_select">选择键位:</label>
+                <select id="key_select">
+                    <option value="108">鼠标左键</option>
+                    <option value="109">鼠标右键</option>
+                    <option value="111">鼠标G4</option>
+                    <option value="112">鼠标G5</option>
+                    <option value="126">手柄LT</option>
+                    <option value="127">手柄RT</option>
+                    <!-- 添加更多选项 -->
+                </select>
+            </div>
+            <div class="control-item">
+                <label for="max_fov">瞄准fov:</label>
+                <input type="range" id="max_fov" min="0" max="50" step="0.1"
+                    oninput="updateSliderValue1(this, 'MaxFovValue')">
+                <span class="slider-value" id="MaxFovValue"></span>
+            </div>
+            <div class="control-item">
+                <label for="smooth">平滑:</label>
+                <input type="range" id="smooth" min="0" max="50" step="0.1"
+                    oninput="updateSliderValue1(this, 'SmoothValue')">
+                <span class="slider-value" id="SmoothValue"></span>
+            </div>
 
         </div>
+        <!-- <div>
+            <div class="control-item">
+                <label for="mode1">mode1:</label>
+                <input type="range" id="mode1" min="0" max="200" step="1" oninput="updateSliderValue1(this, 'mode1V')">
+                <span class="slider-value" id="mode1V"></span>
+            </div>
+            <div class="control-item">
+                <label for="mode2">mode2:</label>
+                <input type="range" id="mode2" min="0" max="200" step="1" oninput="updateSliderValue1(this, 'mode2V')">
+                <span class="slider-value" id="mode2V"></span>
+            </div>
+            <div class="control-item">
+                <label for="mode3">mode3:</label>
+                <input type="range" id="mode3" min="0" max="100" step="1" oninput="updateSliderValue1(this, 'mode3V')">
+                <span class="slider-value" id="mode3V"></span>
+            </div>
+            <div class="control-item">
+                <label for="mode4">mode4:</label>
+                <input type="range" id="mode4" min="0" max="100" step="1" oninput="updateSliderValue1(this, 'mode4V')">
+                <span class="slider-value" id="mode4V"></span>
+            </div>
+        </div> -->
         <div class="control-item">
             <label for="item_glow">物品发光:</label>
             <input type="checkbox" id="item_glow">
+        </div>
+        <div class="control-item">
+            <label for="ViewWarn">手中武器发光:</label>
+            <input type="checkbox" id="ViewWarn">
         </div>
         <div class="control-item">
             <label for="player_glow">人物发光:</label>
@@ -130,7 +180,7 @@
 
     <script>
         var isBackendUrlValid = false;
-        const controls = document.querySelectorAll("input[type='range'], input[type='text'], input[type='checkbox']");
+        const controls = document.querySelectorAll("input[type='range'], input[type='text'], input[type='checkbox'], select");
 
         // 获取后端API的地址
         function getApiUrl() {
@@ -149,11 +199,24 @@
                     document.getElementById("maxDistValue").textContent = data.max_dist.toFixed(1) + "米";
                     document.getElementById("max_fov").value = data.max_fov.toFixed(1);
                     document.getElementById("MaxFovValue").textContent = data.max_fov.toFixed(1);
+                    document.getElementById("smooth").value = data.smooth.toFixed(1);
+                    document.getElementById("SmoothValue").textContent = data.smooth.toFixed(1);
                     document.getElementById("aim").checked = data.aim;
+                    document.getElementById("key_select").value = data.aimkey;
+                    // document.getElementById("mode1").value = data.mode1;
+                    // document.getElementById("mode1V").textContent = data.mode1;
+                    // document.getElementById("mode2").value = data.mode2;
+                    // document.getElementById("mode2V").textContent = data.mode2;
+                    // document.getElementById("mode3").value = data.mode3;
+                    // document.getElementById("mode3V").textContent = data.mode3;
+                    // document.getElementById("mode4").value = data.mode4;
+                    // document.getElementById("mode4V").textContent = data.mode4;
+                    // document.getElementById("aimkey").checked = data.aimkey == 126 ? 1 : 0;
                     // document.getElementById("esp").checked = data.esp;
                     document.getElementById("item_glow").checked = data.item_glow;
                     document.getElementById("player_glow").checked = data.player_glow;
                     document.getElementById("show_shield").checked = data.show_shield;
+                    document.getElementById("ViewWarn").checked = data.ViewWarn;
                     toggleColorPicker();
                 })
                 .catch(error => {
@@ -228,11 +291,19 @@
                 let item_glow_dist = parseFloat(document.getElementById("item_glow_dist").value);
                 let max_dist = parseFloat(document.getElementById("max_dist").value);
                 let max_fov = parseFloat(document.getElementById("max_fov").value);
+                let smooth = parseFloat(document.getElementById("smooth").value);
+                // let mode1 = parseFloat(document.getElementById("mode1").value);
+                // let mode2 = parseFloat(document.getElementById("mode2").value);
+                // let mode3 = parseFloat(document.getElementById("mode3").value);
+                // let mode4 = parseFloat(document.getElementById("mode4").value);
                 // const esp = document.getElementById("esp").checked;
                 const aim = document.getElementById("aim").checked;
+                // const aimkey = document.getElementById("aimkey").checked;
+                const aimkey = parseInt(document.getElementById("key_select").value);
                 const item_glow = document.getElementById("item_glow").checked;
                 const player_glow = document.getElementById("player_glow").checked;
                 const show_shield = document.getElementById("show_shield").checked;
+                const ViewWarn = document.getElementById("ViewWarn").checked;
 
                 // Add 0.01 to decimal part if it is 0
                 if (Math.floor(item_glow_dist) === item_glow_dist) {
@@ -244,16 +315,26 @@
                 if (Math.floor(max_fov) === max_fov) {
                     max_fov += 0.01;
                 }
+                if (Math.floor(smooth) === smooth) {
+                    smooth += 0.01;
+                }
 
                 const requestBody = {
                     item_glow_dist: item_glow_dist,
                     max_dist: max_dist,
                     max_fov: max_fov,
+                    smooth: smooth,
                     // esp: esp ? 1 : 0,
+                    // mode1: mode1,
+                    // mode2: mode2,
+                    // mode3: mode3,
+                    // mode4: mode4,
                     aim: aim ? 2 : 0,
+                    aimkey: aimkey,
                     item_glow: item_glow ? 1 : 0,
                     player_glow: player_glow ? 1 : 0,
-                    show_shield: show_shield ? 1 : 0
+                    show_shield: show_shield ? 1 : 0,
+                    ViewWarn: ViewWarn ? 1 : 0
                 };
 
                 fetch(getApiUrl(), {

@@ -21,6 +21,8 @@ int CheckGameMode();
 void GetGamemode(char *out_str);
 bool IsLobby();
 bool get_button_state(DWORD button);
+void GlowHand(uint64_t currentWeapon, float *color);
+void GlowHandDisable(uint64_t ptr);
 
 class Entity
 {
@@ -82,6 +84,7 @@ public:
 	float get_projectile_gravity();
 	float get_zoom_fov();
 	int get_ammo();
+	uint64_t wep_entity;
 
 private:
 	float projectile_scale;

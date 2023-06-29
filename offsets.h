@@ -49,6 +49,7 @@
 #define OFFSET_ITEM_GLOW 0x02c0              // [RecvTable.DT_HighlightSettings]->m_highlightFunctionBits
 #define GLOW_TYPE 0x02c0 + 0x4               // [RecvTable.DT_HighlightSettings]->m_highlightFunctionBits + 0x4
 #define GLOW_DISTANCE 0x0380 + 0x34          // [RecvTable.DT_HighlightSettings]->m_highlightServerFadeEndTimes + 0x34
+#define OFFSET_VIEWMODEL 0x2d80              // [DataMap.C_Player]->m_hViewModels
 
 #define OFFSET_GLOW_T1 0x262                          // 16256 = enabled, 0 = disabled
 #define OFFSET_GLOW_T2 0x2dc                          // 1193322764 = enabled, 0 = disabled

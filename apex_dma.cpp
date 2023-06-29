@@ -31,6 +31,7 @@ uintptr_t aimentity = 0;
 uintptr_t tmp_aimentity = 0;
 uintptr_t lastaimentity = 0;
 bool show_shield = true;
+bool ViewWarn = true;
 float item_glow_dist = 100.0f;
 float max = 999.0f;
 float max_dist = 200.0f * 40.0f;
@@ -38,7 +39,7 @@ float max_radar_dist = 450.0f;
 float max_dist_float = 1200.0f;
 int team_player = 0;
 int local_team = 0;
-float max_fov = 20;
+float max_fov = 40;
 const int toRead = 100;
 char mapname[64] = {};
 float mapSizeX;
@@ -50,6 +51,7 @@ bool item_glow = false;
 bool player_glow = false;
 extern bool aim_no_recoil;
 bool aiming = false;
+int aim_key = MOUSE_RIGHT;
 extern float smooth;
 extern int bone;
 bool thirdperson = false;
@@ -68,6 +70,10 @@ uint64_t c_Base;
 bool next = false;
 bool valid = false;
 bool lock = false;
+
+extern int mode1, mode2, mode3, mode4;
+float handCol[3] = {0.0f, 0.0f, 0.0f};
+float oldDelay = 0;
 
 extern float WHITE[3];
 
@@ -125,7 +131,8 @@ float lastvis_aim[toRead];
 int tmp_spec = 0, spectators = 0;
 int tmp_all_spec = 0, allied_spectators = 0;
 
-bool k_f1 = 0;
+bool k_f2 = 0;
+bool k_f3 = 0;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -224,11 +231,18 @@ void handle_request(const httplib::Request &req, httplib::Response &res)
 			json_root.AddMember("max_dist", max_dist, json_root.GetAllocator());
 			json_root.AddMember("team_player", team_player, json_root.GetAllocator());
 			json_root.AddMember("max_fov", max_fov, json_root.GetAllocator());
+			json_root.AddMember("smooth", smooth, json_root.GetAllocator());
 			json_root.AddMember("aim", aim, json_root.GetAllocator());
+			json_root.AddMember("aimkey", aim_key, json_root.GetAllocator());
 			json_root.AddMember("esp", esp, json_root.GetAllocator());
 			json_root.AddMember("item_glow", item_glow, json_root.GetAllocator());
 			json_root.AddMember("player_glow", player_glow, json_root.GetAllocator());
 			json_root.AddMember("show_shield", show_shield, json_root.GetAllocator());
+			json_root.AddMember("ViewWarn", ViewWarn, json_root.GetAllocator());
+			json_root.AddMember("mode1", mode1, json_root.GetAllocator());
+			json_root.AddMember("mode2", mode2, json_root.GetAllocator());
+			json_root.AddMember("mode3", mode3, json_root.GetAllocator());
+			json_root.AddMember("mode4", mode4, json_root.GetAllocator());
 
 			// 将JSON对象转换为字符串
 			json_root.Accept(writer);
@@ -256,8 +270,14 @@ void handle_request(const httplib::Request &req, httplib::Response &res)
 				if (json_root.HasMember("max_fov") && json_root["max_fov"].IsNumber())
 					max_fov = json_root["max_fov"].GetFloat();
 
+				if (json_root.HasMember("smooth") && json_root["smooth"].IsNumber())
+					smooth = json_root["smooth"].GetFloat();
+
 				if (json_root.HasMember("aim") && json_root["aim"].IsInt())
 					aim = json_root["aim"].GetInt();
+
+				if (json_root.HasMember("aimkey") && json_root["aimkey"].IsInt())
+					aim_key = json_root["aimkey"].GetInt();
 
 				if (json_root.HasMember("esp") && json_root["esp"].IsInt())
 					esp = json_root["esp"].GetInt();
@@ -270,6 +290,18 @@ void handle_request(const httplib::Request &req, httplib::Response &res)
 
 				if (json_root.HasMember("show_shield") && json_root["show_shield"].IsInt())
 					show_shield = json_root["show_shield"].GetInt();
+
+				if (json_root.HasMember("ViewWarn") && json_root["ViewWarn"].IsInt())
+					ViewWarn = json_root["ViewWarn"].GetInt();
+
+				if (json_root.HasMember("mode1") && json_root["mode1"].IsInt())
+					mode1 = json_root["mode1"].GetInt();
+				if (json_root.HasMember("mode2") && json_root["mode2"].IsInt())
+					mode2 = json_root["mode2"].GetInt();
+				if (json_root.HasMember("mode3") && json_root["mode3"].IsInt())
+					mode3 = json_root["mode3"].GetInt();
+				if (json_root.HasMember("mode4") && json_root["mode4"].IsInt())
+					mode4 = json_root["mode4"].GetInt();
 
 				res.set_content("ok", "text/plain");
 			}
@@ -575,7 +607,23 @@ void ProcessPlayer(Entity &LPlayer, Entity &target, uint64_t entitylist, int ind
 	}
 	lastvis_aim[index] = target.lastVisTime();
 }
+auto Rainbow(float delay)
+{
+	static uint32_t cnt = 0;
+	float freq = delay;
 
+	if (++cnt >= (uint32_t)-1)
+	{
+		cnt = 0;
+	}
+	if (delay != oldDelay)
+	{
+		cnt = 0;
+		oldDelay = delay;
+	}
+
+	return std::make_tuple(std::sin(freq * cnt + 0) * 2.f, std::sin(freq * cnt + 2) * 2.3f, std::sin(freq * cnt + 4) * 2.6f);
+}
 void DoActions()
 {
 	actions_t = true;
@@ -620,19 +668,6 @@ void DoActions()
 					apex_mem.Write<int>(LPlayer.ptr + OFFSET_THIRDPERSON_SV, 0);
 					tmp_thirdperson = false;
 				}
-			}
-
-			if (get_button_state(KEY_F2) && k_f1 == 0)
-			{
-				k_f1 = 1;
-				if (aim == 0)
-					aim = 2;
-				else
-					aim = 0;
-			}
-			else if (!get_button_state(KEY_F2) && k_f1 == 1)
-			{
-				k_f1 = 0;
 			}
 
 			uint64_t entitylist = g_Base + OFFSET_ENTITYLIST;
@@ -682,6 +717,7 @@ void DoActions()
 			else
 			{
 				float *color = WHITE;
+				int mode = CheckGameMode();
 				for (int i = 0; i < toRead; i++)
 				{
 					uint64_t centity = 0;
@@ -700,7 +736,7 @@ void DoActions()
 					ProcessPlayer(LPlayer, Target, entitylist, i);
 
 					int entity_team = Target.getTeamId();
-					int mode = CheckGameMode();
+
 					if (mode == CONTROL_MODE)
 					{
 						entity_team %= 2;
@@ -711,7 +747,7 @@ void DoActions()
 						continue;
 					}
 
-					if (player_glow && !Target.isGlowing())
+					if (player_glow)
 					{
 						if (Target.IsVisible())
 						{
@@ -736,6 +772,25 @@ void DoActions()
 						Target.disableGlow();
 					}
 				}
+			}
+			handCol[0] = std::get<0>(Rainbow(0.05f));
+			handCol[1] = std::get<1>(Rainbow(0.05f));
+			handCol[2] = std::get<2>(Rainbow(0.05f));
+
+			uint64_t ViewModelHandle = 0;
+			apex_mem.Read<uint64_t>(LocalPlayer + OFFSET_VIEWMODEL, ViewModelHandle);
+
+			ViewModelHandle &= 0xffff;
+
+			uint64_t ViewModelPtr = 0;
+			apex_mem.Read<uint64_t>(g_Base + OFFSET_ENTITYLIST + ViewModelHandle * 0x20, ViewModelPtr);
+			if (tmp_spec > 0)
+			{
+				GlowHand(ViewModelPtr, handCol);
+			}
+			else
+			{
+				GlowHandDisable(ViewModelPtr);
 			}
 
 			if (!spectators && !allied_spectators)
@@ -776,6 +831,35 @@ void DoActions()
 		}
 	}
 	actions_t = false;
+}
+
+void HotKeys()
+{
+	while (1)
+	{
+
+		if (get_button_state(KEY_F2) && k_f2 == 0)
+		{
+			k_f2 = 1;
+			if (aim == 0)
+				aim = 2;
+			else
+				aim = 0;
+		}
+		else if (!get_button_state(KEY_F2) && k_f2 == 1)
+		{
+			k_f2 = 0;
+		}
+		if (get_button_state(KEY_F3) && k_f3 == 0)
+		{
+			k_f3 = 1;
+			player_glow = !player_glow;
+		}
+		else if (!get_button_state(KEY_F3) && k_f3 == 1)
+		{
+			k_f3 = 0;
+		}
+	}
 }
 Entity VisTarget;
 void GetPlayers()
@@ -818,6 +902,7 @@ void GetPlayers()
 
 			std::vector<playerData> TmpPlayerList = {};
 			playerData tmpPlayer;
+
 			if (!LPlayer.isAlive())
 			{
 				bool visok = false;
@@ -1356,10 +1441,22 @@ static void AimbotLoop()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		while (g_Base != 0)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			if (aim > 0)
 			{
-				aiming = get_button_state(MOUSE_RIGHT);
+				aiming = get_button_state(aim_key);
+				if (!aiming)
+				{
+					if (aim_key == MOUSE_RIGHT)
+					{
+						aiming = get_button_state(MOUSE_LEFT);
+					}
+					else if (aim_key == KEY_XBUTTON_LTRIGGER)
+					{
+						aiming = get_button_state(KEY_XBUTTON_RTRIGGER);
+					}
+				}
+
 				if (aimentity == 0 || !aiming)
 				{
 					lock = false;
@@ -1373,6 +1470,11 @@ static void AimbotLoop()
 				if (LocalPlayer == 0)
 					continue;
 				Entity LPlayer = getEntity(LocalPlayer);
+				if (LPlayer.isKnocked() || !LPlayer.isAlive())
+				{
+					continue;
+				}
+
 				QAngle Angles = CalculateBestBoneAim(LPlayer, aimentity, max_fov);
 				if (Angles.x == 0 && Angles.y == 0)
 				{
@@ -1566,6 +1668,7 @@ int main(int argc, char *argv[])
 
 	std::thread aimbot_thr;
 	std::thread esp_thr;
+	std::thread hotkeys_thr;
 	std::thread actions_thr;
 	std::thread players_thr;
 	std::thread allplayers_thr;
@@ -1612,6 +1715,7 @@ int main(int argc, char *argv[])
 				server_thr = std::thread(Server_Func);
 				ws_server_thr = std::thread(wsServer_Func);
 				actions_thr = std::thread(DoActions);
+				hotkeys_thr = std::thread(HotKeys);
 				players_thr = std::thread(GetPlayers);
 				allplayers_thr = std::thread(GetAllPlayers);
 				itemglow_thr = std::thread(item_glow_t);
@@ -1620,6 +1724,7 @@ int main(int argc, char *argv[])
 				server_thr.detach();
 				ws_server_thr.detach();
 				actions_thr.detach();
+				hotkeys_thr.detach();
 				players_thr.detach();
 				allplayers_thr.detach();
 				itemglow_thr.detach();
