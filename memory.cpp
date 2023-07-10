@@ -1,7 +1,7 @@
 #include "memory.h"
 
-//Credits: learn_more, stevemk14ebr
-size_t findPattern(const PBYTE rangeStart, size_t len, const char* pattern)
+// Credits: learn_more, stevemk14ebr
+size_t findPattern(const PBYTE rangeStart, size_t len, const char *pattern)
 {
 	size_t l = strlen(pattern);
 	PBYTE patt_base = static_cast<PBYTE>(malloc(l >> 1));
@@ -49,6 +49,67 @@ size_t findPattern(const PBYTE rangeStart, size_t len, const char* pattern)
 	return -1;
 }
 
+size_t Memory::FindPattern(uint64_t address, size_t length, const char *pattern)
+{
+	size_t patternLength = strlen(pattern);
+	size_t bytePatternLength = patternLength / 2;
+	std::vector<uint8_t> bytePattern(bytePatternLength);
+	std::vector<uint8_t> mask(bytePatternLength);
+
+	// Convert pattern string to byte pattern and mask
+	for (size_t i = 0, j = 0; i < patternLength; i += 2, ++j)
+	{
+		if (pattern[i] == '?')
+		{
+			bytePattern[j] = 0;
+			mask[j] = '?';
+		}
+		else
+		{
+			char byteString[3] = {pattern[i], pattern[i + 1], '\0'};
+			char *endPtr;
+			unsigned long byteValue = std::strtoul(byteString, &endPtr, 16);
+
+			if (endPtr != byteString + 2)
+			{
+				// Invalid hex character encountered
+				return static_cast<size_t>(-1);
+			}
+
+			bytePattern[j] = static_cast<uint8_t>(byteValue);
+			mask[j] = 'x';
+		}
+	}
+
+	// Search for the pattern in the memory range
+	for (size_t offset = 0; offset < length - bytePatternLength; ++offset)
+	{
+		bool found = true;
+		for (size_t i = 0; i < bytePatternLength; ++i)
+		{
+			uint8_t memoryByte;
+			if (!Read(address + offset + i, memoryByte))
+			{
+				found = false;
+				break;
+			}
+
+			if ((memoryByte != bytePattern[i]) && (mask[i] != '?'))
+			{
+				found = false;
+				break;
+			}
+		}
+
+		if (found)
+		{
+			return offset;
+		}
+	}
+
+	return static_cast<size_t>(-1); // Pattern not found
+}
+
 uint64_t Memory::get_proc_baseaddr()
 {
 	return proc.baseaddr;
@@ -64,7 +125,7 @@ void Memory::check_proc()
 	if (status == process_status::FOUND_READY)
 	{
 		short c;
-        Read<short>(proc.baseaddr, c);
+		Read<short>(proc.baseaddr, c);
 
 		if (c != 0x5A4D)
 		{
@@ -74,56 +135,56 @@ void Memory::check_proc()
 	}
 }
 
-void Memory::open_proc(const char* name)
+void Memory::open_proc(const char *name)
 {
-    if(!conn)
-    {
-        ConnectorInventory *inv = inventory_scan();
-        conn = inventory_create_connector(inv, "qemu_procfs", "");
-        inventory_free(inv);
-    }
+	if (!conn)
+	{
+		ConnectorInventory *inv = inventory_scan();
+		conn = inventory_create_connector(inv, "qemu_procfs", "");
+		inventory_free(inv);
+	}
 
-    if (conn)
-    {
-        if(!kernel)
-        {
-            kernel = kernel_build(conn);
-        }
+	if (conn)
+	{
+		if (!kernel)
+		{
+			kernel = kernel_build(conn);
+		}
 
-        if(kernel)
-        {
-            Kernel *tmp_ker = kernel_clone(kernel);
-		    proc.hProcess = kernel_into_process(tmp_ker, name);
-        }
-		
-        if (proc.hProcess)
-        {
+		if (kernel)
+		{
+			Kernel *tmp_ker = kernel_clone(kernel);
+			proc.hProcess = kernel_into_process(tmp_ker, name);
+		}
+
+		if (proc.hProcess)
+		{
 			Win32ModuleInfo *module = process_module_info(proc.hProcess, name);
 
 			if (module)
-            {
+			{
 				OsProcessModuleInfoObj *obj = module_info_trait(module);
 				proc.baseaddr = os_process_module_base(obj);
 				os_process_module_free(obj);
 				mem = process_virt_mem(proc.hProcess);
-                status = process_status::FOUND_READY;
-            }
-            else
-            {
-                status = process_status::FOUND_NO_ACCESS;
+				status = process_status::FOUND_READY;
+			}
+			else
+			{
+				status = process_status::FOUND_NO_ACCESS;
 				close_proc();
-            }
-        }
-        else
-        {
-            status = process_status::NOT_FOUND;
-        }
-    }
-    else
-    {
-        printf("Can't create connector\n");
+			}
+		}
+		else
+		{
+			status = process_status::NOT_FOUND;
+		}
+	}
+	else
+	{
+		printf("Can't create connector\n");
 		exit(0);
-    }
+	}
 }
 
 void Memory::close_proc()
@@ -131,7 +192,7 @@ void Memory::close_proc()
 	if (proc.hProcess)
 	{
 		process_free(proc.hProcess);
-		virt_free(mem);	
+		virt_free(mem);
 	}
 
 	proc.hProcess = 0;

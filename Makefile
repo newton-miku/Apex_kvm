@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-I./memflow_lib/memflow-win32-ffi/ -I./memflow_lib/memflow-ffi/ -L./memflow_lib/target/release -Wno-multichar
+CXXFLAGS=-I./memflow_lib/memflow-win32-ffi/ -I./memflow_lib/memflow-ffi/ -L./memflow_lib/target/release -Wno-multichar -fpermissive
 LIBS=-lm -Wl,--no-as-needed -ldl -lpthread -lboost_system -l:libmemflow_win32_ffi.a
 
 OUTDIR=./build

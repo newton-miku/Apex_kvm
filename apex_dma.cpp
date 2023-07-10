@@ -57,6 +57,7 @@ extern int bone;
 bool thirdperson = false;
 bool chargerifle = false;
 bool shooting = false;
+uint64_t LocalPlayerPtr = 0;
 
 bool actions_t = false;
 bool players_t = false;
@@ -607,6 +608,8 @@ void ProcessPlayer(Entity &LPlayer, Entity &target, uint64_t entitylist, int ind
 	}
 	lastvis_aim[index] = target.lastVisTime();
 }
+
+// 生成一个颜色数组循环彩虹的颜色
 auto Rainbow(float delay)
 {
 	static uint32_t cnt = 0;
@@ -878,7 +881,7 @@ void GetPlayers()
 			apex_mem.Read<uint64_t>(g_Base + OFFSET_LOCAL_ENT, LocalPlayer);
 			if (LocalPlayer == 0)
 				continue;
-
+			LocalPlayerPtr = LocalPlayer;
 			Entity LPlayer = getEntity(LocalPlayer);
 			Entity Local = LPlayer;
 
@@ -1488,6 +1491,64 @@ static void AimbotLoop()
 	}
 	aim_t = false;
 }
+void SG_Func()
+{
+	bool superGlideStart = false;
+	int frameSleepTimer, superGlideTimer;
+	float lastFrameNumber = 0;
+	float curTime;
+
+	while (true)
+	{
+		if (!LocalPlayerPtr)
+		{
+			continue;
+		}
+
+		float w, m_traversalProgress, m_traversalProgressTmp;
+		float curFrameNumber;
+		apex_mem.Read<float>(g_Base + OFFSET_GLOBALVAR + 0x08, curFrameNumber);
+		if (curFrameNumber > lastFrameNumber)
+		{
+			frameSleepTimer = 10; // <- middle of the frame
+		}
+		lastFrameNumber = curFrameNumber;
+
+		if (frameSleepTimer == 0)
+		{
+			apex_mem.Read<float>(LocalPlayerPtr + OFFSET_HANG_TIME, m_traversalProgress);
+			if (m_traversalProgress > 0.35 && m_traversalProgress < 1.0)
+			{
+				superGlideStart = true;
+			}
+
+			if (superGlideStart)
+			{
+				superGlideTimer++;
+
+				if (superGlideTimer == 5)
+				{
+					apex_mem.Write<int>(g_Base + OFFSET_IN_JUMP + 0x08, 5);
+				}
+				else if (superGlideTimer == 6)
+				{
+					apex_mem.Write<int>(g_Base + OFFSET_IN_DUCK + 0x08, 6);
+				}
+				else if (superGlideTimer == 14)
+				{
+					apex_mem.Write<int>(g_Base + OFFSET_IN_JUMP + 0x08, 4);
+					m_traversalProgressTmp = m_traversalProgress;
+				}
+				else if (superGlideTimer > 10 && m_traversalProgress != m_traversalProgressTmp)
+				{
+					superGlideStart = false;
+					superGlideTimer = 0;
+				}
+			}
+		}
+		frameSleepTimer -= 1;
+	}
+}
 
 static void set_vars(uint64_t add_addr)
 {
@@ -1670,6 +1731,7 @@ int main(int argc, char *argv[])
 	std::thread esp_thr;
 	std::thread hotkeys_thr;
 	std::thread actions_thr;
+	// std::thread SG_thr;
 	std::thread players_thr;
 	std::thread allplayers_thr;
 	std::thread server_thr;
@@ -1715,6 +1777,7 @@ int main(int argc, char *argv[])
 				server_thr = std::thread(Server_Func);
 				ws_server_thr = std::thread(wsServer_Func);
 				actions_thr = std::thread(DoActions);
+				// SG_thr = std::thread(SG_Func);
 				hotkeys_thr = std::thread(HotKeys);
 				players_thr = std::thread(GetPlayers);
 				allplayers_thr = std::thread(GetAllPlayers);
@@ -1724,6 +1787,7 @@ int main(int argc, char *argv[])
 				server_thr.detach();
 				ws_server_thr.detach();
 				actions_thr.detach();
+				// SG_thr.detach();
 				hotkeys_thr.detach();
 				players_thr.detach();
 				allplayers_thr.detach();

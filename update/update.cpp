@@ -181,7 +181,7 @@ void remove_last_space(char *str)
 
 int main(int argc, char *argv[])
 {
-    char *ininame = "D:\\aaaProject\\OFFSET\\offset\\v3.0.35.21.ini";
+    char *ininame = "D:\\aaaProject\\OFFSET\\offset\\v3.0.37.29.ini";
     if (argc < 2)
     {
         printf("ini needed.\n");
@@ -190,8 +190,8 @@ int main(int argc, char *argv[])
     {
         ininame = argv[1];
     }
-    const char *filename = "D:\\aaaProject\\project\\apex_dma_kvm_pub\\apex_dma\\update\\offsets.h";
-    const char *tempname = "D:\\aaaProject\\project\\apex_dma_kvm_pub\\apex_dma\\update\\temp.h";
+    const char *filename = "offsets.h";
+    const char *tempname = "temp.h";
     DefineInfo *infoArray;
     int count = parseDefines(filename, &infoArray);
 
@@ -228,6 +228,11 @@ int main(int argc, char *argv[])
                 if (ok == 0)
                 {
                     char offset[50];
+                    if (!strcmp("GameVersion", infoArray[i].arrowPart)) {
+                        char buf1[20];
+                        sprintf(buf1, "\"%s\"", buf);
+                        strcpy(buf, buf1);
+                    }
                     strcpy(offset, buf);
                     strcat(offset, " ");
                     strcat(offset, infoArray[i].plusPart);

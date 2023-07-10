@@ -92,7 +92,7 @@ bool get_button_state(DWORD button)
 {
 	DWORD a0;
 	apex_mem.Read<DWORD>(g_Base + OFFSET_INPUTSYSTEM + ((button >> 5) * 4) + 0xb0, a0);
-	return (a0 >> (button & 31)) & 1;
+	return (a0 >> (button & 31)) == 1;
 }
 void GetGamemode(char *out_str)
 {

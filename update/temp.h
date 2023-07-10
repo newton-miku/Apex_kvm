@@ -1,12 +1,19 @@
-#define OFFSET_INPUTSYSTEM       	0x17a4400           		// [Miscellaneous]->InputSystem 
-#define OFFSET_ENTITYLIST        	0x1e53c68           		// [Miscellaneous]->cl_entitylist 
-#define OFFSET_GLOBALVAR         	0x16f9d80           		// [Miscellaneous]->GlobalVars 
-#define OFFSET_LOCAL_ENT         	err                 		// [Globals]->.?AVC_GameMovement@@ + 0x8
-#define OFFSET_GAMEMODE          	0x0223c7e0 + 0x58   		// [ConVars]->mp_gamemode + 0x58
-#define OFFSET_NAME_LIST         	0xbe94be0           		// [Miscellaneous]->NameList 
-#define OFFSET_THIRDPERSON       	0x01de35b0 + 0x6c   		// [ConVars]->thirdperson_override + 0x6c
-#define OFFSET_TIMESCALE         	0x01798b90          		// [ConVars]->host_timescale 
-#define OFFSET_LEVEL_NAME        	0x16fa230           		// [Miscellaneous]->LevelName 
+#define GAMEVERSION              	"v3.0.37.29"        		// [Miscellaneous]->GameVersion 
+#define OFFSET_RENDER            	0x0743da80 - 0x1F60 		// [NetworkedStringTables]->EffectDispatch - 0x1F60
+#define OFFSET_VISIBLE_TIME      	0x1a6d + 0x3        		// [RecvTable.DT_BaseCombatCharacter]->m_hudInfo_visibilityTestAlwaysPasses + 0x3
+#define OFFSET_ZOOM              	0x00b8              		// [DataMap.WeaponPlayerData]->m_curZoomFOV 
+#define OFFSET_ZOOM_FOV          	0x16b0 + OFFSET_ZOOM		// [RecvTable.DT_WeaponX]->m_playerData + OFFSET_ZOOM
+#define OFFSET_HANG_ON_WALL      	0x2b60              		// [DataMap.C_Player]->m_traversalStartTime 
+#define OFFSET_HANG_TIME         	0x2b5c              		// [DataMap.C_Player]->m_traversalProgress 
+#define OFFSET_INPUTSYSTEM       	0x17a5400           		// [Miscellaneous]->InputSystem 
+#define OFFSET_ENTITYLIST        	0x1e54d08           		// [Miscellaneous]->cl_entitylist 
+#define OFFSET_GLOBALVAR         	0x16fad80           		// [Miscellaneous]->GlobalVars 
+#define OFFSET_LOCAL_ENT         	0x022046c0 + 0xA8   		// [ConVars]->player_overheat_time_to_overheat + 0xA8
+#define OFFSET_GAMEMODE          	0x0223d880 + 0x58   		// [ConVars]->mp_gamemode + 0x58
+#define OFFSET_NAME_LIST         	0xbe95be0           		// [Miscellaneous]->NameList 
+#define OFFSET_THIRDPERSON       	0x01de45b0 + 0x6c   		// [ConVars]->thirdperson_override + 0x6c
+#define OFFSET_TIMESCALE         	0x01799b90          		// [ConVars]->host_timescale 
+#define OFFSET_LEVEL_NAME        	0x16fb230           		// [Miscellaneous]->LevelName 
 #define OFFSET_TEAM              	0x044c              		// [RecvTable.DT_BaseEntity]->m_iTeamNum 
 #define OFFSET_HEALTH            	0x043c              		// [RecvTable.DT_Player]->m_iHealth 
 #define OFFSET_SHIELD            	0x0170              		// [RecvTable.DT_BaseEntity]->m_shieldHealth 
@@ -34,3 +41,6 @@
 #define OFFSET_ITEM_GLOW         	0x02c0              		// [RecvTable.DT_HighlightSettings]->m_highlightFunctionBits 
 #define GLOW_TYPE                	0x02c0 + 0x4        		// [RecvTable.DT_HighlightSettings]->m_highlightFunctionBits + 0x4
 #define GLOW_DISTANCE            	0x0380 + 0x34       		// [RecvTable.DT_HighlightSettings]->m_highlightServerFadeEndTimes + 0x34
+#define OFFSET_VIEWMODEL         	0x2d80              		// [DataMap.C_Player]->m_hViewModels 
+#define OFFSET_IN_JUMP           	0x0743e428          		// [Buttons]->in_jump 
+#define OFFSET_IN_DUCK           	0x0be96648          		// [Buttons]->in_duck 
