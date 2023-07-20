@@ -1,0 +1,46 @@
+name: build
+
+on:
+  push:
+  release:
+    types: [created] # 表示在创建新的 Release 时触发
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: chmod
+      run: chmod +x *.sh
+    - name: apt update
+      run: sudo apt update
+    - name: apt install
+      run: sudo apt install libcpp-httplib-dev rapidjson-dev libwebsocketpp-dev libboost-all-dev cmake -y
+    - name: setHttpLib
+      run: ./setHttpLib.sh
+    - name: refreash
+      run: sudo ldconfig
+    - name: Build
+      #run: ./build.sh
+      run: make
+    - name: clean obj
+      run: rm -rf build/obj
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ApexBuild
+        path: build/
+    - name: zipAll
+      run: tar -zcvf Build.tar.gz build
+    - name: Upload to release
+      uses: xresloader/upload-to-github-release@v1.3.12
+      with:
+        file: Build.tar.gz
+        update_latest_release: true
+        draft: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

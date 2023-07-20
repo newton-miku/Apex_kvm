@@ -781,7 +781,7 @@ void DoActions()
 			handCol[2] = std::get<2>(Rainbow(0.05f));
 
 			uint64_t ViewModelHandle = 0;
-			apex_mem.Read<uint64_t>(LocalPlayer + OFFSET_VIEWMODEL, ViewModelHandle);
+			apex_mem.Read<uint64_t>(LocalPlayer + OFFSET_VIEWMODEL + 0xc, ViewModelHandle);
 
 			ViewModelHandle &= 0xffff;
 
