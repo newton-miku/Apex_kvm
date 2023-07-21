@@ -7,6 +7,7 @@
 #include <cfloat>
 #include "Game.h"
 #include <thread>
+#include <fstream>
 
 #include <stdlib.h>
 #include <httplib.h>
@@ -213,7 +214,117 @@ void handle_options(const httplib::Request &req, httplib::Response &res)
 	res.set_header("Access-Control-Allow-Headers", "Content-Type");
 	res.status = 200; // 设置状态码为 200，表示请求成功
 }
+void save_variables_to_file()
+{
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
 
+	rapidjson::Document json_root;
+	json_root.SetObject();
+
+	json_root.AddMember("item_glow_dist", item_glow_dist, json_root.GetAllocator());
+	json_root.AddMember("max_dist", max_dist, json_root.GetAllocator());
+	json_root.AddMember("team_player", team_player, json_root.GetAllocator());
+	json_root.AddMember("max_fov", max_fov, json_root.GetAllocator());
+	json_root.AddMember("smooth", smooth, json_root.GetAllocator());
+	json_root.AddMember("aim", aim, json_root.GetAllocator());
+	json_root.AddMember("aimkey", aim_key, json_root.GetAllocator());
+	json_root.AddMember("esp", esp, json_root.GetAllocator());
+	json_root.AddMember("item_glow", item_glow, json_root.GetAllocator());
+	json_root.AddMember("player_glow", player_glow, json_root.GetAllocator());
+	json_root.AddMember("show_shield", show_shield, json_root.GetAllocator());
+	json_root.AddMember("ViewWarn", ViewWarn, json_root.GetAllocator());
+	json_root.AddMember("mode1", mode1, json_root.GetAllocator());
+	json_root.AddMember("mode2", mode2, json_root.GetAllocator());
+	json_root.AddMember("mode3", mode3, json_root.GetAllocator());
+	json_root.AddMember("mode4", mode4, json_root.GetAllocator());
+
+	json_root.Accept(writer);
+	const char *json_str = buffer.GetString();
+
+	std::ofstream file("settings.json");
+	if (file.is_open())
+	{
+		file << json_str;
+		file.close();
+	}
+	else
+	{
+		std::cout << "文件打开失败" << std::endl; // Handle file open error if necessary
+	}
+}
+bool load_variables_from_file()
+{
+	std::ifstream file("settings.json");
+	if (!file.is_open())
+	{
+		std::cout << "文件打开失败" << std::endl; // Handle file open error if necessary
+		return false;
+	}
+
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+	file.close();
+
+	std::string json_str = buffer.str();
+
+	rapidjson::Document json_root;
+	if (json_root.Parse(json_str.c_str()).HasParseError())
+	{
+		std::cout << "Json解析失败" << std::endl; // Handle JSON parsing error if necessary
+		return false;
+	}
+
+	if (json_root.HasMember("item_glow_dist") && json_root["item_glow_dist"].IsNumber())
+		item_glow_dist = json_root["item_glow_dist"].GetFloat();
+
+	if (json_root.HasMember("max_dist") && json_root["max_dist"].IsNumber())
+		max_dist = json_root["max_dist"].GetFloat();
+
+	if (json_root.HasMember("team_player") && json_root["team_player"].IsInt())
+		team_player = json_root["team_player"].GetInt();
+
+	if (json_root.HasMember("max_fov") && json_root["max_fov"].IsNumber())
+		max_fov = json_root["max_fov"].GetFloat();
+
+	if (json_root.HasMember("smooth") && json_root["smooth"].IsNumber())
+		smooth = json_root["smooth"].GetFloat();
+
+	if (json_root.HasMember("aim") && json_root["aim"].IsInt())
+		aim = json_root["aim"].GetInt();
+
+	if (json_root.HasMember("aimkey") && json_root["aimkey"].IsInt())
+		aim_key = json_root["aimkey"].GetInt();
+
+	if (json_root.HasMember("esp") && json_root["esp"].IsInt())
+		esp = json_root["esp"].GetInt();
+
+	if (json_root.HasMember("item_glow") && json_root["item_glow"].IsInt())
+		item_glow = json_root["item_glow"].GetInt();
+
+	if (json_root.HasMember("player_glow") && json_root["player_glow"].IsInt())
+		player_glow = json_root["player_glow"].GetInt();
+
+	if (json_root.HasMember("show_shield") && json_root["show_shield"].IsInt())
+		show_shield = json_root["show_shield"].GetInt();
+
+	if (json_root.HasMember("ViewWarn") && json_root["ViewWarn"].IsInt())
+		ViewWarn = json_root["ViewWarn"].GetInt();
+
+	if (json_root.HasMember("mode1") && json_root["mode1"].IsInt())
+		mode1 = json_root["mode1"].GetInt();
+
+	if (json_root.HasMember("mode2") && json_root["mode2"].IsInt())
+		mode2 = json_root["mode2"].GetInt();
+
+	if (json_root.HasMember("mode3") && json_root["mode3"].IsInt())
+		mode3 = json_root["mode3"].GetInt();
+
+	if (json_root.HasMember("mode4") && json_root["mode4"].IsInt())
+		mode4 = json_root["mode4"].GetInt();
+
+	return true;
+}
 void handle_request(const httplib::Request &req, httplib::Response &res)
 {
 	rapidjson::StringBuffer buffer;
@@ -311,6 +422,14 @@ void handle_request(const httplib::Request &req, httplib::Response &res)
 				res.set_content("json ERR", "text/plain");
 			}
 		}
+	}
+	else if (req.path == "/api/save")
+	{
+		save_variables_to_file();
+	}
+	else if (req.path == "/api/load")
+	{
+		load_variables_from_file();
 	}
 	else
 	{
@@ -514,6 +633,14 @@ int Server_Func()
 
 	server.Get("/api/control", [](const httplib::Request &req, httplib::Response &res)
 			   { handle_request(req, res); });
+	server.Get("/api/save", [](const httplib::Request &req, httplib::Response &res)
+			   { handle_request(req, res); });
+	server.Get("/api/load", [](const httplib::Request &req, httplib::Response &res)
+			   { handle_request(req, res); });
+	server.Post("/api/save", [](const httplib::Request &req, httplib::Response &res)
+				{ handle_request(req, res); });
+	server.Post("/api/load", [](const httplib::Request &req, httplib::Response &res)
+				{ handle_request(req, res); });
 	auto handleRequest = [](const httplib::Request & /*req*/, httplib::Response &res)
 	{
 		std::vector<Enemy> enemies = generateEnemies(1);

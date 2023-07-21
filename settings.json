@@ -1,0 +1,18 @@
+{
+    "item_glow_dist": 100,
+    "max_dist": 1200,
+    "team_player": 8,
+    "max_fov": 50,
+    "smooth": 20,
+    "aim": 2,
+    "aimkey": 126,
+    "esp": false,
+    "item_glow": false,
+    "player_glow": true,
+    "show_shield": true,
+    "ViewWarn": true,
+    "mode1": 126,
+    "mode2": 9,
+    "mode3": 46,
+    "mode4": 30
+}

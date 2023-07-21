@@ -174,6 +174,8 @@
         </div>
 
         <button id="updateButton" class="button" onclick="validateBackendUrl()">链接</button>
+        <button id="saveButton" class="button" onclick="Save()" style="display: none;">保存设置</button>
+        <button id="loadButton" class="button" onclick="Load()" style="display: none;">加载设置</button><br>
         <a href="radar.html">雷达</a>
         <a href="map.html">地图</a>
     </div>
@@ -185,12 +187,12 @@
         // 获取后端API的地址
         function getApiUrl() {
             const backendUrl = window.location.hostname + ":8000";
-            return "http://" + backendUrl + "/api/control";
+            return "http://" + backendUrl + "/api/";
         }
 
         // 获取控制变量的值
         function getControlValues() {
-            fetch(getApiUrl())
+            fetch(getApiUrl() + "control")
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById("item_glow_dist").value = data.item_glow_dist.toFixed(1);
@@ -222,6 +224,12 @@
                 .catch(error => {
                     console.log("Error:", error);
                 });
+        }
+        function Save() {
+            fetch(getApiUrl() + "save");
+        }
+        function Load() {
+            fetch(getApiUrl() + "load");
         }
 
         // 更新滑块数值显示
@@ -262,13 +270,15 @@
 
         // 验证后端地址是否有效
         function validateBackendUrl() {
-            fetch(getApiUrl())
+            fetch(getApiUrl() + "control")
                 .then(response => {
                     if (response.ok) {
                         isBackendUrlValid = true;
                         console.log("Backend URL is valid");
-                        document.getElementById("updateButton").innerText = "更新控制变量";
+                        document.getElementById("updateButton").innerText = "更新设置";
                         document.getElementById("updateButton").onclick = updateControls;
+                        document.getElementById("saveButton").style.display = "inline-block";
+                        document.getElementById("loadButton").style.display = "inline-block";
                         startAutoUpdate();
                     } else {
                         console.log("Failed to validate backend URL");
@@ -337,7 +347,7 @@
                     ViewWarn: ViewWarn ? 1 : 0
                 };
 
-                fetch(getApiUrl(), {
+                fetch(getApiUrl() + "control", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
